@@ -1,3 +1,5 @@
+from hiredis import Reader, ReplyError
+
 STR = b'$%d\r\n%b\r\n'
 RAW = b'%b'
 
@@ -110,7 +112,12 @@ def compile(*args):
     return ctx['__fn']
 
 
-def execute(commands, client=None, sock=None):
+class RedisError(Exception):
+    def __init__(self, msg, cmd):
+        super().__init__('{}: {}'.format(msg, cmd))
+
+
+def execute(commands, client=None, sock=None, fail=True):
     assert client or sock, 'client or sock is required'
 
     if client:
@@ -122,31 +129,26 @@ def execute(commands, client=None, sock=None):
 
     try:
         errors = []
-        data = b''
         cnt = len(commands)
+        reader = Reader()
         while cnt > 0:
-            data += sock.recv(16384)
+            data = sock.recv(16384)
+            if not data:
+                break  # pragma: no cover
 
-            lines = data.splitlines(keepends=True)
-            if lines[-1].endswith(b'\r\n'):
-                data = b''
-            else:
-                data = lines[-1]
-                lines = lines[:-1]
-
-            for line in lines:
-                if not cnt:
-                    break  # pragma: no cover
-
-                if line.startswith(b'$') and line != b'$-1\r\n':
-                    continue
-
-                if line.startswith(b'-'):
-                    errors.append((line[1:-2], parse_cmd(commands[len(commands) - cnt])))
-
+            reader.feed(data)
+            while True:
+                r = reader.gets()
+                if r is False:
+                    break
+                if type(r) is ReplyError:
+                    errors.append((str(r), parse_cmd(commands[len(commands) - cnt])))
                 cnt -= 1
     finally:
         client and client.connection_pool.release(conn)
+
+    if errors and fail:
+        raise RedisError(*errors[0])
 
     return errors
 

@@ -65,13 +65,19 @@ def test_bulk_string_response():
     sock = SocketMock(b'$3\r\nboo\r\n', b'$-1\r\n', b'-ERR boo\r\n')
     cmd = rw.compile('SET', bytes, int)
     chunk = [cmd(b'boo', r) for r in range(3)]
-    errors = rw.execute(chunk, sock=sock)
-    assert errors == [(b'ERR boo', b'SET boo 2')]
+    errors = rw.execute(chunk, sock=sock, fail=False)
+    assert errors == [('ERR boo', b'SET boo 2')]
 
 
 def test_truncated_response():
     sock = SocketMock(b'+OK\r\n', b'-Err', b' INVALID\r\n', b'+OK\r\n')
     cmd = rw.compile('SET', bytes, int)
     chunk = [cmd(b'boo', r) for r in range(3)]
-    errors = rw.execute(chunk, sock=sock)
-    assert errors == [(b'Err INVALID', b'SET boo 1')]
+    errors = rw.execute(chunk, sock=sock, fail=False)
+    assert errors == [('Err INVALID', b'SET boo 1')]
+
+    sock = SocketMock(b'+OK\r\n', b'-Err', b' INVALID\r\n', b'+OK\r\n')
+    try:
+        rw.execute(chunk, sock=sock)
+    except rw.RedisError as e:
+        assert str(e) == "Err INVALID: b'SET boo 1'"
