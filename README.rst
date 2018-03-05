@@ -10,7 +10,7 @@ redis_writer
 
 .. |pyver| image:: https://img.shields.io/badge/python-3.5%2C_3.6-blue.svg
 
-A fast serializator to pipeline data into redis:
+A fast serializer to pipeline data into redis:
 
 .. code:: python
 

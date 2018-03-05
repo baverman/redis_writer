@@ -7,7 +7,7 @@ setup(
     license='MIT',
     author='Anton Bobrov',
     author_email='baverman@gmail.com',
-    description='Fast serializator to pipeline data into redis',
+    description='Fast serializer to pipeline data into redis',
     long_description=open('README.rst').read(),
     py_modules=['redis_writer'],
     include_package_data=False,
