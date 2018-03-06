@@ -10,6 +10,7 @@ setup(
     description='Fast serializer to pipeline data into redis',
     long_description=open('README.rst').read(),
     py_modules=['redis_writer'],
+    install_requires=['hiredis >= 0.2'],
     include_package_data=False,
     zip_safe=False,
     platforms='any',
