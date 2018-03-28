@@ -1,5 +1,5 @@
 ARG IMAGE
 FROM ${IMAGE}
 
-RUN apk add redis
+RUN apk --no-cache add redis build-base
 RUN pip install pytest pytest-cov redis hiredis

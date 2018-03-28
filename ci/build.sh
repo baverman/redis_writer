@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
-pyver=${1:?Version is required}
+image=${1:?Docker image is required}
 shift
-docker build --build-arg IMAGE=$pyver -t redis-writer-$pyver -f ci/Dockerfile.test ci
+pyver=$(basename $image)
+docker build --build-arg IMAGE=$image -t redis-writer-$pyver -f ci/Dockerfile.test ci
 docker run --rm -w /build -u $UID:$GROUPS -v $PWD:/build redis-writer-$pyver ./ci/run-tests.sh "$@"
